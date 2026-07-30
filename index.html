@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>投資日誌</title>
+<style>
+  :root {
+    --bg: #eceae1;
+    --paper: #f7f5ee;
+    --ink: #20242c;
+    --ink-soft: #4a5058;
+    --muted: #8b8a7f;
+    --rule: #cac7b8;
+    --rule-strong: #9c9a8c;
+    --accent: #8a6a34;
+    --accent-soft: #cbb27c;
+    --up: #b23a3a;
+    --down: #2e7d5b;
+    --focus: #3a6ea5;
+    --shadow: rgba(32, 36, 44, 0.08);
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161b;
+    --paper: #1b1e25;
+    --ink: #e9e6da;
+    --ink-soft: #b7b4a7;
+    --muted: #7c7b72;
+    --rule: #34384060;
+    --rule-strong: #454a54;
+    --accent: #cda05a;
+    --accent-soft: #7d6836;
+    --up: #e0685f;
+    --down: #55b587;
+    --focus: #7fb0e0;
+    --shadow: rgba(0, 0, 0, 0.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161b;
+      --paper: #1b1e25;
+      --ink: #e9e6da;
+      --ink-soft: #b7b4a7;
+      --muted: #7c7b72;
+      --rule: #34384060;
+      --rule-strong: #454a54;
+      --accent: #cda05a;
+      --accent-soft: #7d6836;
+      --up: #e0685f;
+      --down: #55b587;
+      --focus: #7fb0e0;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang TC", "Hiragino Sans TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .sheet {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    box-shadow: 0 1px 3px var(--shadow), 0 12px 32px -20px var(--shadow);
+    padding: 36px clamp(20px, 5vw, 56px) 48px;
+  }
+
+  /* ---- masthead ---- */
+  .eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .masthead-rule {
+    height: 3px;
+    margin: 10px 0 22px;
+    background: linear-gradient(to right, var(--ink) 0 2px, transparent 2px 6px) repeat-x;
+    background-size: 6px 3px;
+    opacity: 0.55;
+  }
+  .date-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .date-row input {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--rule-strong);
+    padding: 2px 0;
+    width: 190px;
+  }
+  h1.headline {
+    font-family: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 4px 0 28px;
+    text-wrap: balance;
+    outline: none;
+  }
+  h1.headline:empty:before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 34px;
+  }
+  .stat {
+    background: var(--paper);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat .label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .stat .value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .stat input {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+  }
+  .stat .unit { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .stat.pnl.up input, .stat.pnl.up .unit { color: var(--up); }
+  .stat.pnl.down input, .stat.pnl.down .unit { color: var(--down); }
+  .stat .arrow { font-size: 13px; }
+
+  input:focus, [contenteditable]:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* ---- sections ---- */
+  section.block { margin-top: 36px; }
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    margin-bottom: 12px;
+  }
+  .section-label:before { content: ""; }
+  .section-label .rule { flex: 1; height: 1px; background: var(--rule-strong); opacity: 0.6; }
+
+  /* ---- tables (holdings / trades) ---- */
+  .tablewrap { overflow-x: auto; }
+  table.grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  table.grid th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--rule-strong);
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+  table.grid td.num, table.grid th.num { min-width: 56px; }
+  table.grid td {
+    border-bottom: 1px solid var(--rule);
+    padding: 4px 8px;
+    vertical-align: middle;
+  }
+  table.grid td[contenteditable], table.grid input {
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    width: 100%;
+    padding: 4px 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.grid td.num, table.grid input.num { text-align: right; }
+  table.grid tr td.rowdel {
+    width: 24px;
+    text-align: center;
+  }
+  .rowdel button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    padding: 2px;
+  }
+  .rowdel button:hover { color: var(--up); }
+
+  .addrow {
+    margin-top: 10px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: transparent;
+    border: 1px dashed var(--accent-soft);
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .addrow:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+  /* ---- journal / prose blocks ---- */
+  .prose {
+    min-height: 90px;
+    font-size: 14.5px;
+    line-height: 1.9;
+    padding: 12px 14px;
+    border: 1px solid var(--rule);
+    background-image: repeating-linear-gradient(var(--paper), var(--paper) 27px, var(--rule) 28px);
+    outline: none;
+  }
+  .prose:empty:before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+  }
+
+  /* ---- chart upload ---- */
+  .chartbox {
+    position: relative;
+    border: 1px dashed var(--rule-strong);
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .chartbox img { width: 100%; display: block; }
+  .chartbox .hint { padding: 20px; }
+  .chartbox .clear {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    display: none;
+  }
+  .chartbox.filled .clear { display: block; }
+
+  /* ---- sparkline history ---- */
+  .sparkwrap {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+  }
+  .sparkwrap svg { flex: 1; min-width: 0; height: 64px; }
+  .sparkline-empty {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 10px 0;
+  }
+
+  /* ---- accumulated daily records ---- */
+  .records { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .records .empty { background: var(--paper); padding: 14px; font-size: 12px; color: var(--muted); }
+  .record { background: var(--paper); }
+  .record summary {
+    list-style: none;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .record summary::-webkit-details-marker { display: none; }
+  .record summary:before { content: "▸"; color: var(--muted); font-size: 10px; transition: transform .15s; }
+  .record[open] summary:before { transform: rotate(90deg); }
+  .record .r-date { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-soft); white-space: nowrap; }
+  .record .r-headline { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .record .r-total { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .record .r-pnl { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .record .r-pnl.up { color: var(--up); }
+  .record .r-pnl.down { color: var(--down); }
+  .record .r-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 2px; }
+  .record .r-del:hover { color: var(--up); }
+  .record .r-body { padding: 4px 14px 18px; font-size: 13px; }
+  .record .r-body h4 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-family: ui-monospace, monospace; margin: 14px 0 6px; font-weight: 500; }
+  .record .r-body h4:first-child { margin-top: 0; }
+  .record .r-prose { line-height: 1.8; white-space: pre-wrap; }
+  .record .r-body table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .record .r-body td { border-bottom: 1px solid var(--rule); padding: 3px 6px; }
+  .record .r-body td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- footer actions ---- */
+  .actions {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule-strong);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    padding: 9px 16px;
+    cursor: pointer;
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .note {
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 520px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="sheet" id="sheet">
+    <div class="eyebrow">
+      <span>投資日誌 · TRADING LOG</span>
+      <span id="weekday"></span>
+    </div>
+    <div class="masthead-rule"></div>
+
+    <div class="date-row">
+      <span>日期</span>
+      <input type="date" id="f-date" />
+    </div>
+    <h1 class="headline" id="f-headline" contenteditable="true" data-placeholder="今日重點一句話，例如：台積電財報優於預期，大盤創高但量能不足，尾盤獲利了結三成"></h1>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="label">大盤指數</div>
+        <div class="value-row"><input id="f-index" class="num" inputmode="decimal" placeholder="0" /><span class="unit">點</span></div>
+      </div>
+      <div class="stat pnl" id="stat-indexchg">
+        <div class="label">大盤漲跌</div>
+        <div class="value-row"><span class="arrow" id="indexchg-arrow"></span><input id="f-indexchg" class="num" inputmode="decimal" placeholder="0" /><span class="unit">%</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">總資產</div>
+        <div class="value-row"><span class="unit">NT$</span><input id="f-total" class="num" inputmode="decimal" placeholder="0" /></div>
+      </div>
+      <div class="stat pnl" id="stat-pnl">
+        <div class="label">今日損益</div>
+        <div class="value-row"><span class="arrow" id="pnl-arrow"></span><input id="f-pnl" class="num" inputmode="decimal" placeholder="0" /><span class="unit">%</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">曝險部位</div>
+        <div class="value-row"><input id="f-exposure" class="num" inputmode="decimal" placeholder="0" /><span class="unit">%</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">現金比重</div>
+        <div class="value-row"><input id="f-cash" class="num" inputmode="decimal" placeholder="0" /><span class="unit">%</span></div>
+      </div>
+    </div>
+    <div class="note" style="margin:-24px 0 26px">大盤指數為手動輸入（此頁面不連外部資料，無法自動抓取即時報價），收盤後或看盤時自行填入即可。</div>
+
+    <section class="block">
+      <div class="section-label">持倉 Holdings<span class="rule"></span></div>
+      <div class="tablewrap">
+        <table class="grid" id="tbl-holdings">
+          <thead>
+            <tr><th>標的</th><th class="num">股數</th><th class="num">成本</th><th class="num">現價</th><th class="num">損益%</th><th class="num">佔比%</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <button class="addrow" data-add="holdings">+ 新增持倉</button>
+    </section>
+
+    <section class="block">
+      <div class="section-label">走勢圖 Chart<span class="rule"></span></div>
+      <div class="chartbox" id="chartbox">
+        <div class="hint">點擊上傳今日走勢圖 / 截圖<br />（僅存於本機瀏覽器，不會上傳到任何伺服器）</div>
+        <img id="chart-img" style="display:none" />
+        <button class="clear" id="chart-clear">清除圖片</button>
+      </div>
+      <input type="file" id="chart-file" accept="image/*" style="display:none" />
+    </section>
+
+    <section class="block">
+      <div class="section-label">內文 · 市場觀察<span class="rule"></span></div>
+      <div class="prose" id="f-view" contenteditable="true" data-placeholder="今天大盤 / 個股的走勢、成交量、消息面怎麼解讀？跟自己原本的劇本對得上嗎？"></div>
+    </section>
+
+    <section class="block">
+      <div class="section-label">內文 · 心裡小劇場<span class="rule"></span></div>
+      <div class="prose" id="f-feel" contenteditable="true" data-placeholder="老實寫：緊張、貪心、後悔、想凹單？今天有沒有因為情緒做了不在計畫內的動作？"></div>
+    </section>
+
+    <section class="block">
+      <div class="section-label">交易紀錄 Trades<span class="rule"></span></div>
+      <div class="tablewrap">
+        <table class="grid" id="tbl-trades">
+          <thead>
+            <tr><th>時間</th><th>標的</th><th>買/賣</th><th class="num">股數</th><th class="num">價格</th><th>備註</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <button class="addrow" data-add="trades">+ 新增交易</button>
+    </section>
+
+    <section class="block">
+      <div class="section-label">資產變化 Asset History<span class="rule"></span></div>
+      <div class="sparkwrap" id="sparkwrap">
+        <div class="sparkline-empty" id="spark-empty">按下方「封存今日」後，資產變化會逐日累積成一條走勢線。</div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="section-label">每日紀錄 Daily Records<span class="rule"></span></div>
+      <div class="records" id="records">
+        <div class="empty">封存過的每一天會累積在這裡，點開可回顧當天的持倉、內文與交易紀錄。</div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn primary" id="btn-archive">封存今日 → 開始新的一天</button>
+      <button class="btn" id="btn-print">列印 / 另存 PDF</button>
+      <span class="note">資料只存在本機瀏覽器（localStorage），清除瀏覽器資料會遺失紀錄。</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var NS = "invLog_v2_";
+  var $ = function (id) { return document.getElementById(id); };
+
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  var WEEKDAYS = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+
+  function updateWeekday() {
+    var v = $("f-date").value;
+    if (!v) { $("weekday").textContent = ""; return; }
+    var parts = v.split("-").map(Number);
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    $("weekday").textContent = WEEKDAYS[d.getDay()];
+  }
+
+  function save() {
+    var state = {
+      date: $("f-date").value,
+      headline: $("f-headline").innerHTML,
+      index: $("f-index").value,
+      indexchg: $("f-indexchg").value,
+      total: $("f-total").value,
+      pnl: $("f-pnl").value,
+      exposure: $("f-exposure").value,
+      cash: $("f-cash").value,
+      view: $("f-view").innerHTML,
+      feel: $("f-feel").innerHTML,
+      chart: $("chart-img").getAttribute("src") || "",
+      holdings: readRows("tbl-holdings"),
+      trades: readRows("tbl-trades")
+    };
+    localStorage.setItem(NS + "state", JSON.stringify(state));
+  }
+
+  function stripHtml(html) {
+    var d = document.createElement("div");
+    d.innerHTML = html || "";
+    return (d.textContent || "").trim();
+  }
+
+  function readRows(tableId) {
+    var rows = [];
+    document.querySelectorAll("#" + tableId + " tbody tr").forEach(function (tr) {
+      var cells = [];
+      tr.querySelectorAll("[data-cell]").forEach(function (c) {
+        cells.push(c.tagName === "INPUT" ? c.value : c.innerHTML);
+      });
+      rows.push(cells);
+    });
+    return rows;
+  }
+
+  function holdingsRow(vals) {
+    vals = vals || ["", "", "", "", "", ""];
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td contenteditable="true" data-cell>' + vals[0] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[1] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[2] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[3] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[4] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[5] + '</td>' +
+      '<td class="rowdel"><button title="刪除">×</button></td>';
+    tr.querySelector(".rowdel button").addEventListener("click", function () { tr.remove(); save(); });
+    tr.querySelectorAll("[data-cell]").forEach(function (c) { c.addEventListener("input", save); });
+    return tr;
+  }
+
+  function tradesRow(vals) {
+    vals = vals || ["", "", "", "", "", ""];
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td contenteditable="true" data-cell>' + vals[0] + '</td>' +
+      '<td contenteditable="true" data-cell>' + vals[1] + '</td>' +
+      '<td contenteditable="true" data-cell>' + vals[2] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[3] + '</td>' +
+      '<td class="num" contenteditable="true" data-cell>' + vals[4] + '</td>' +
+      '<td contenteditable="true" data-cell>' + vals[5] + '</td>' +
+      '<td class="rowdel"><button title="刪除">×</button></td>';
+    tr.querySelector(".rowdel button").addEventListener("click", function () { tr.remove(); save(); });
+    tr.querySelectorAll("[data-cell]").forEach(function (c) { c.addEventListener("input", save); });
+    return tr;
+  }
+
+  function addRow(kind, vals) {
+    var tbody = document.querySelector("#tbl-" + kind + " tbody");
+    var row = kind === "holdings" ? holdingsRow(vals) : tradesRow(vals);
+    tbody.appendChild(row);
+  }
+
+  function updateDeltaStyle(statId, inputId, arrowId) {
+    var v = parseFloat($(inputId).value);
+    var stat = $(statId);
+    var arrow = $(arrowId);
+    stat.classList.remove("up", "down");
+    if (isNaN(v) || v === 0) { arrow.textContent = ""; return; }
+    if (v > 0) { stat.classList.add("up"); arrow.textContent = "▲"; }
+    else { stat.classList.add("down"); arrow.textContent = "▼"; }
+  }
+  function updatePnlStyle() { updateDeltaStyle("stat-pnl", "f-pnl", "pnl-arrow"); }
+  function updateIndexChgStyle() { updateDeltaStyle("stat-indexchg", "f-indexchg", "indexchg-arrow"); }
+
+  function getRecords() {
+    return JSON.parse(localStorage.getItem(NS + "records") || "[]");
+  }
+  function setRecords(recs) {
+    recs.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    if (recs.length > 180) recs = recs.slice(recs.length - 180);
+    localStorage.setItem(NS + "records", JSON.stringify(recs));
+    return recs;
+  }
+
+  function renderSparkline() {
+    var recs = getRecords();
+    var wrap = $("sparkwrap");
+    if (recs.length < 2) {
+      wrap.innerHTML = '<div class="sparkline-empty" id="spark-empty">按下方「封存今日」後，資產變化會逐日累積成一條走勢線（至少需要 2 天資料）。</div>';
+      return;
+    }
+    var vals = recs.map(function (h) { return h.total; });
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+    var range = (max - min) || 1;
+    var w = 600, h = 56, pad = 4;
+    var pts = vals.map(function (v, i) {
+      var x = pad + (i / (vals.length - 1)) * (w - pad * 2);
+      var y = h - pad - ((v - min) / range) * (h - pad * 2);
+      return x.toFixed(1) + "," + y.toFixed(1);
+    });
+    var last = vals[vals.length - 1], first = vals[0];
+    var up = last >= first;
+    var color = up ? "var(--up)" : "var(--down)";
+    var lastPt = pts[pts.length - 1].split(",");
+    var svg =
+      '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img" aria-label="資產變化走勢">' +
+      '<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+      '<circle cx="' + lastPt[0] + '" cy="' + lastPt[1] + '" r="3.5" fill="' + color + '"/>' +
+      '</svg>';
+    wrap.innerHTML = svg +
+      '<div class="note" style="font-family:ui-monospace,monospace;white-space:nowrap">' +
+      recs[0].date + ' → ' + recs[recs.length - 1].date + '</div>';
+  }
+
+  function recordRowsTable(rows, cols, numIdx) {
+    var body = rows.filter(function (r) { return r.some(function (c) { return stripHtml(c); }); });
+    if (!body.length) return '<div class="note">（無資料）</div>';
+    var head = '<tr>' + cols.map(function (c) { return '<td style="border-bottom:1px solid var(--rule-strong);color:var(--muted);font-size:11px">' + c + '</td>'; }).join("") + '</tr>';
+    var rowsHtml = body.map(function (r) {
+      return '<tr>' + r.map(function (c, i) {
+        var cls = numIdx.indexOf(i) !== -1 ? "num" : "";
+        return '<td class="' + cls + '">' + (c || "") + '</td>';
+      }).join("") + '</tr>';
+    }).join("");
+    return '<table>' + head + rowsHtml + '</table>';
+  }
+
+  function renderRecords() {
+    var recs = getRecords().slice().reverse();
+    var wrap = $("records");
+    if (!recs.length) {
+      wrap.innerHTML = '<div class="empty">封存過的每一天會累積在這裡，點開可回顧當天的持倉、內文與交易紀錄。</div>';
+      return;
+    }
+    wrap.innerHTML = recs.map(function (r, idx) {
+      var pnl = parseFloat(r.pnl);
+      var pnlCls = isNaN(pnl) || pnl === 0 ? "" : (pnl > 0 ? "up" : "down");
+      var pnlTxt = r.pnl !== "" && r.pnl != null ? (pnl > 0 ? "+" : "") + r.pnl + "%" : "";
+      var totalTxt = r.total !== "" && r.total != null ? "NT$ " + Number(r.total).toLocaleString() : "";
+      var indexTxt = r.index ? "大盤 " + r.index + (r.indexchg ? "（" + (parseFloat(r.indexchg) > 0 ? "+" : "") + r.indexchg + "%）" : "") : "";
+      return '<details class="record" data-idx="' + idx + '">' +
+        '<summary>' +
+          '<span class="r-date">' + r.date + '</span>' +
+          '<span class="r-headline">' + (stripHtml(r.headline) || "（未填標題）") + '</span>' +
+          '<span class="r-total">' + totalTxt + '</span>' +
+          '<span class="r-pnl ' + pnlCls + '">' + pnlTxt + '</span>' +
+          '<button class="r-del" title="刪除這天的紀錄">×</button>' +
+        '</summary>' +
+        '<div class="r-body">' +
+          (indexTxt ? '<h4>大盤</h4><div class="r-prose">' + indexTxt + '</div>' : "") +
+          '<h4>曝險 / 現金</h4><div class="r-prose">曝險 ' + (r.exposure || "0") + '%　現金 ' + (r.cash || "0") + '%</div>' +
+          '<h4>持倉</h4>' + recordRowsTable(r.holdings || [], ["標的","股數","成本","現價","損益%","佔比%"], [1,2,3,4,5]) +
+          '<h4>市場觀察</h4><div class="r-prose">' + (r.view || '<span class="note">（未填寫）</span>') + '</div>' +
+          '<h4>心裡小劇場</h4><div class="r-prose">' + (r.feel || '<span class="note">（未填寫）</span>') + '</div>' +
+          '<h4>交易紀錄</h4>' + recordRowsTable(r.trades || [], ["時間","標的","買/賣","股數","價格","備註"], [3,4]) +
+        '</div>' +
+      '</details>';
+    }).join("");
+    wrap.querySelectorAll(".r-del").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var idx = parseInt(btn.closest(".record").getAttribute("data-idx"), 10);
+        if (!confirm("刪除這天的封存紀錄？此動作無法復原。")) return;
+        var all = getRecords().slice().reverse();
+        all.splice(idx, 1);
+        setRecords(all.reverse());
+        renderSparkline();
+        renderRecords();
+      });
+    });
+  }
+
+  function clearForNewDay() {
+    $("f-date").value = todayISO();
+    updateWeekday();
+    $("f-headline").innerHTML = "";
+    $("f-pnl").value = "";
+    $("f-indexchg").value = "";
+    $("f-view").innerHTML = "";
+    $("f-feel").innerHTML = "";
+    document.querySelector("#tbl-trades tbody").innerHTML = "";
+    setChartImage("");
+    updatePnlStyle();
+    updateIndexChgStyle();
+    save();
+  }
+
+  function setChartImage(src) {
+    var img = $("chart-img");
+    var box = $("chartbox");
+    if (src) {
+      img.src = src;
+      img.style.display = "block";
+      box.querySelector(".hint").style.display = "none";
+      box.classList.add("filled");
+    } else {
+      img.removeAttribute("src");
+      img.style.display = "none";
+      box.querySelector(".hint").style.display = "block";
+      box.classList.remove("filled");
+    }
+  }
+
+  function load() {
+    var raw = localStorage.getItem(NS + "state");
+    var state = raw ? JSON.parse(raw) : null;
+    $("f-date").value = (state && state.date) || todayISO();
+    updateWeekday();
+    if (state) {
+      $("f-headline").innerHTML = state.headline || "";
+      $("f-index").value = state.index || "";
+      $("f-indexchg").value = state.indexchg || "";
+      $("f-total").value = state.total || "";
+      $("f-pnl").value = state.pnl || "";
+      $("f-exposure").value = state.exposure || "";
+      $("f-cash").value = state.cash || "";
+      $("f-view").innerHTML = state.view || "";
+      $("f-feel").innerHTML = state.feel || "";
+      if (state.chart) setChartImage(state.chart);
+      (state.holdings || []).forEach(function (r) { addRow("holdings", r); });
+      (state.trades || []).forEach(function (r) { addRow("trades", r); });
+    }
+    if (!state || !state.holdings || state.holdings.length === 0) addRow("holdings");
+    if (!state || !state.trades || state.trades.length === 0) addRow("trades");
+    updatePnlStyle();
+    updateIndexChgStyle();
+    renderSparkline();
+    renderRecords();
+  }
+
+  ["f-date"].forEach(function (id) { $(id).addEventListener("change", function () { updateWeekday(); save(); }); });
+  ["f-headline", "f-view", "f-feel"].forEach(function (id) { $(id).addEventListener("input", save); });
+  ["f-index"].forEach(function (id) { $(id).addEventListener("input", save); });
+  ["f-indexchg"].forEach(function (id) {
+    $(id).addEventListener("input", function () { updateIndexChgStyle(); save(); });
+  });
+  ["f-total", "f-pnl", "f-exposure", "f-cash"].forEach(function (id) {
+    $(id).addEventListener("input", function () { updatePnlStyle(); save(); });
+  });
+
+  $("[data-add]");
+  document.querySelectorAll("[data-add]").forEach(function (btn) {
+    btn.addEventListener("click", function () { addRow(btn.getAttribute("data-add")); save(); });
+  });
+
+  $("chartbox").addEventListener("click", function (e) {
+    if (e.target.id === "chart-clear") return;
+    $("chart-file").click();
+  });
+  $("chart-file").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) { setChartImage(ev.target.result); save(); };
+    reader.readAsDataURL(file);
+  });
+  $("chart-clear").addEventListener("click", function (e) {
+    e.stopPropagation();
+    setChartImage("");
+    save();
+  });
+
+  $("btn-archive").addEventListener("click", function () {
+    var total = parseFloat($("f-total").value);
+    if (isNaN(total)) {
+      alert("請先在上方「總資產」填入今天的數字，才能封存並畫出資產變化線。");
+      return;
+    }
+    var date = $("f-date").value || todayISO();
+    var record = {
+      date: date,
+      headline: $("f-headline").innerHTML,
+      index: $("f-index").value,
+      indexchg: $("f-indexchg").value,
+      total: total,
+      pnl: $("f-pnl").value,
+      exposure: $("f-exposure").value,
+      cash: $("f-cash").value,
+      view: $("f-view").innerHTML,
+      feel: $("f-feel").innerHTML,
+      holdings: readRows("tbl-holdings"),
+      trades: readRows("tbl-trades")
+    };
+    var recs = getRecords().filter(function (r) { return r.date !== date; });
+    recs.push(record);
+    setRecords(recs);
+    renderSparkline();
+    renderRecords();
+    clearForNewDay();
+  });
+
+  $("btn-print").addEventListener("click", function () { window.print(); });
+
+  load();
+})();
+</script>
+</body>
+</html>
