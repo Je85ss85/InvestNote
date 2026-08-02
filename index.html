@@ -512,7 +512,12 @@ label{display:block;font-size:9px;color:var(--txd);letter-spacing:1px;text-trans
   <!-- 交易記錄 -->
   <div class="sec-hdr"><div class="sec-ttl">交易紀錄 · TRADES</div></div>
   <div style="overflow-x:auto;">
-    <table class="tbl"><thead><tr><th>時間</th><th>標的</th><th>買/賣</th><th>股數</th><th>價格</th><th>備註</th><th></th></tr></thead><tbody id="trade_b"></tbody></table>
+    <table class="tbl">
+      <thead><tr>
+        <th>時間</th><th>標的</th><th>買/賣</th><th>股數/張</th><th>價格</th><th>盈虧（元）</th><th>備註</th><th></th>
+      </tr></thead>
+      <tbody id="trade_b"></tbody>
+    </table>
   </div>
   <button class="btn-add" onclick="addTrade()">＋ 新增交易</button>
 
@@ -697,21 +702,70 @@ function delPos(id){positions=positions.filter(p=>p.id!==id);renderPos();upd();s
 // ── 交易 ─────────────────────────────────────
 function renderTrades(){
   const tb=$('trade_b');tb.innerHTML='';
-  trades.forEach((t,i)=>{
-    const col=t.side==='買'?'var(--r)':'var(--b)';
+  if(!trades.length){
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="color:var(--txd);">${t.time}</td><td style="font-weight:700;">${t.name}</td>
-      <td style="color:${col};font-weight:700;">${t.side}</td><td>${t.shares}</td><td>${t.price}</td>
-      <td style="color:var(--txm);">${t.note||'—'}</td>
-      <td><span onclick="delTrade(${i})" style="cursor:pointer;color:var(--txd);">×</span></td>`;
+    tr.innerHTML=`<td colspan="8" style="text-align:center;color:var(--txd);padding:14px;font-family:'JetBrains Mono',monospace;font-size:10px;">點擊「＋ 新增交易」開始記錄</td>`;
+    tb.appendChild(tr);return;
+  }
+  trades.forEach((t,i)=>{
+    const pnlColor=!t.pnl?'var(--txd)':t.pnl>0?'var(--g)':t.pnl<0?'var(--r)':'var(--txd)';
+    const sideCol=t.side==='買'?'var(--r)':'var(--b)';
+    const tr=document.createElement('tr');
+    // 輸入格樣式
+    const is='background:none;border:none;border-bottom:1px solid var(--bd);outline:none;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--tx);width:100%;padding:2px 4px;';
+    tr.innerHTML=`
+      <td style="min-width:60px;">
+        <input style="${is}width:55px;" value="${t.time||''}" placeholder="09:30"
+          onchange="updT(${i},'time',this.value)">
+      </td>
+      <td style="min-width:90px;">
+        <input style="${is}" value="${t.name||''}" placeholder="00631L"
+          onchange="updT(${i},'name',this.value)">
+      </td>
+      <td style="min-width:60px;">
+        <select style="background:none;border:none;border-bottom:1px solid var(--bd);outline:none;font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 2px;cursor:pointer;color:${sideCol};font-weight:700;"
+          onchange="updT(${i},'side',this.value)">
+          <option value="買" ${t.side==='買'?'selected':''} style="color:var(--r);">買入</option>
+          <option value="賣" ${t.side==='賣'?'selected':''} style="color:var(--b);">賣出</option>
+          <option value="再平衡" ${t.side==='再平衡'?'selected':''} style="color:var(--y);">再平衡</option>
+          <option value="加碼" ${t.side==='加碼'?'selected':''} style="color:var(--g);">加碼</option>
+        </select>
+      </td>
+      <td style="min-width:70px;">
+        <input style="${is}width:60px;text-align:right;" type="number" value="${t.shares||''}" placeholder="1000"
+          onchange="updT(${i},'shares',this.value)">
+      </td>
+      <td style="min-width:80px;">
+        <input style="${is}width:70px;text-align:right;" type="number" value="${t.price||''}" placeholder="28.50" step="0.01"
+          onchange="updT(${i},'price',this.value)">
+      </td>
+      <td style="min-width:90px;">
+        <input style="${is}width:80px;text-align:right;color:${pnlColor};font-weight:700;" type="number" value="${t.pnl||''}" placeholder="±盈虧"
+          onchange="updT(${i},'pnl',this.value)">
+      </td>
+      <td style="min-width:100px;">
+        <input style="${is}" value="${t.note||''}" placeholder="備註"
+          onchange="updT(${i},'note',this.value)">
+      </td>
+      <td><span onclick="delTrade(${i})" style="cursor:pointer;color:var(--txd);font-size:14px;padding:0 4px;">×</span></td>`;
     tb.appendChild(tr);
   });
 }
-function addTrade(){
-  const nt=new Date();const time=nt.getHours().toString().padStart(2,'0')+':'+nt.getMinutes().toString().padStart(2,'0');
-  trades.unshift({time,name:'',side:'買',shares:0,price:0,note:''});
+
+function updT(i,field,val){
+  if(!trades[i])return;
+  if(field==='shares'||field==='price'||field==='pnl') trades[i][field]=parseFloat(val)||0;
+  else trades[i][field]=val;
   renderTrades();saveJnl();
 }
+
+function addTrade(){
+  const nt=new Date();
+  const time=nt.getHours().toString().padStart(2,'0')+':'+nt.getMinutes().toString().padStart(2,'0');
+  trades.unshift({time,name:'',side:'買',shares:0,price:0,pnl:0,note:''});
+  renderTrades();saveJnl();
+}
+
 function delTrade(i){trades.splice(i,1);renderTrades();saveJnl();}
 
 // ── 走勢圖（支援兩張）───────────────────────────
