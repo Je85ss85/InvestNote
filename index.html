@@ -73,21 +73,20 @@ label{display:block;font-size:9px;color:var(--txd);letter-spacing:1px;text-trans
 .ss{font-size:9px;color:var(--txd);margin-top:3px;}
 
 /* ── 三桶 ───────────────────────────── */
-.bg3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:13px;}
-@media(max-width:660px){.bg3{grid-template-columns:1fr;}}
-.bkt{border-radius:10px;padding:13px;border:1px solid;}
+.bg3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:13px;}
+.bkt{border-radius:10px;padding:11px;border:1px solid;}
 .bkt.l2{background:rgba(0,255,136,.05);border-color:rgba(0,255,136,.3);}
 .bkt.l1{background:rgba(0,180,255,.05);border-color:rgba(0,180,255,.3);}
 .bkt.ca{background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.3);}
-.bk-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:9px;font-weight:700;}
+.bk-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:700;}
 .bk-lbl.g{color:var(--g)}.bk-lbl.b{color:var(--b)}.bk-lbl.y{color:var(--y)}
-.bk-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;}
-.bk-nm{font-size:10px;color:var(--txm);white-space:nowrap;flex-shrink:0;}
-.bk-inp{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:5px 8px;width:100%;outline:none;text-align:right;min-width:0;}
+.bk-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:4px;}
+.bk-nm{font-size:9px;color:var(--txm);white-space:nowrap;flex-shrink:0;}
+.bk-inp{background:var(--s2);border:1px solid var(--bd2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:4px 6px;width:100%;outline:none;text-align:right;min-width:0;}
 .bk-inp.g{color:var(--g)}.bk-inp.b{color:var(--b)}.bk-inp.y{color:var(--y)}
 .bk-inp:focus{border-color:var(--g);}
-.bk-tot{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;text-align:right;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd);}
-.bk-pct{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right;margin-top:3px;color:var(--txd);}
+.bk-tot{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;text-align:right;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd);}
+.bk-pct{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right;margin-top:3px;}
 
 /* ── 比例條 ─────────────────────────── */
 .tribar{height:18px;display:flex;border-radius:9px;overflow:hidden;gap:2px;margin:8px 0;}
@@ -469,22 +468,38 @@ label{display:block;font-size:9px;color:var(--txd);letter-spacing:1px;text-trans
 
   <!-- 持倉 -->
   <div class="sec-hdr"><div class="sec-ttl">持倉 · HOLDINGS</div></div>
-  <div style="font-size:10px;color:var(--txd);margin-bottom:8px;">直接填今日市值，占比與損益自動計算</div>
+  <div style="font-size:10px;color:var(--txd);margin-bottom:8px;font-family:'JetBrains Mono',monospace;">數字與第一頁「資產配置」完全同步，在第一頁修改後這裡自動更新</div>
   <div style="overflow-x:auto;">
     <table class="tbl">
-      <thead><tr><th>標的</th><th>類型</th><th>今日市值</th><th>前日市值</th><th>今日損益</th><th>占比%</th><th></th></tr></thead>
+      <thead><tr><th>標的</th><th>類型</th><th>今日市值</th><th>前日市值</th><th>今日損益</th><th>占比%</th></tr></thead>
       <tbody id="pos_b"></tbody>
     </table>
   </div>
-  <button class="btn-add" onclick="addPos()">＋ 新增持倉</button>
-
-  <!-- 走勢圖 -->
-  <div class="sec-hdr"><div class="sec-ttl">走勢圖 · CHART</div></div>
-  <div class="chart-zone" id="chart_zone" onclick="document.getElementById('chart_file').click()">
-    <img id="chart_img" style="display:none;max-width:100%;border-radius:3px;">
-    <div class="chart-ztxt" id="chart_txt">點擊上傳今日走勢圖 / 截圖<br><span style="font-size:9px;opacity:.6;">（僅存於本機，不上傳伺服器）</span></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+    <button class="btn-add" onclick="addPos()">＋ 新增標的</button>
+    <button class="btn-add" onclick="syncFromBuckets()" style="border-color:var(--g);color:var(--g);">🔄 從三桶同步</button>
   </div>
-  <input type="file" id="chart_file" accept="image/*" style="display:none;" onchange="loadChart(this)">
+
+  <!-- 走勢圖 x2 -->
+  <div class="sec-hdr"><div class="sec-ttl">走勢圖 · CHART</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+    <div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txd);letter-spacing:1px;margin-bottom:6px;">圖一</div>
+      <div class="chart-zone" id="chart_zone" onclick="document.getElementById('chart_file').click()">
+        <img id="chart_img" style="display:none;max-width:100%;border-radius:3px;">
+        <div class="chart-ztxt" id="chart_txt">點擊上傳<br>走勢圖 / 截圖</div>
+      </div>
+      <input type="file" id="chart_file" accept="image/*" style="display:none;" onchange="loadChart(this,1)">
+    </div>
+    <div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txd);letter-spacing:1px;margin-bottom:6px;">圖二</div>
+      <div class="chart-zone" id="chart_zone2" onclick="document.getElementById('chart_file2').click()">
+        <img id="chart_img2" style="display:none;max-width:100%;border-radius:3px;">
+        <div class="chart-ztxt" id="chart_txt2">點擊上傳<br>走勢圖 / 截圖</div>
+      </div>
+      <input type="file" id="chart_file2" accept="image/*" style="display:none;" onchange="loadChart(this,2)">
+    </div>
+  </div>
 
   <!-- 市場觀察 -->
   <div class="sec-hdr"><div class="sec-ttl">內文 · 市場觀察</div></div>
@@ -567,6 +582,7 @@ function saveJnl(){
     idx_base:$('idx_base').value,
     positions,trades,nextId,
     chart:$('chart_img').src||'',
+    chart2:$('chart_img2').src||'',
   }));}catch(e){}
 }
 
@@ -587,6 +603,7 @@ function loadAll(){
     if(d.trades)trades=d.trades;
     if(d.nextId)nextId=d.nextId;
     if(d.chart){$('chart_img').src=d.chart;$('chart_img').style.display='block';$('chart_txt').style.display='none';}
+    if(d.chart2){$('chart_img2').src=d.chart2;$('chart_img2').style.display='block';$('chart_txt2').style.display='none';}
   }catch(e){}
 }
 
@@ -637,25 +654,35 @@ let nextId=6, trades=[];
 
 function renderPos(){
   const tb=$('pos_b');tb.innerHTML='';
+  // 先從三桶同步市值到前五個持倉
+  const tw2=parseFloat($('b_tw2').value)||0;
+  const nq2=parseFloat($('b_nq2').value)||0;
+  const tsmc=parseFloat($('b_tsmc').value)||0;
+  const nq1=parseFloat($('b_nq1').value)||0;
+  const cash=(parseFloat($('b_cash').value)||0)+(parseFloat($('b_bond').value)||0);
+  const syncMap={1:tw2,2:nq2,3:tsmc,4:nq1,5:cash};
+  positions.forEach(p=>{if(syncMap[p.id]!==undefined)p.mv=syncMap[p.id];});
+
   const total=positions.reduce((s,p)=>s+(p.mv||0),0);
   positions.forEach(p=>{
-    const mv=p.mv||0, prev=p.prev||0;
-    const dayPnl=prev>0?mv-prev:0, dayP=prev>0?dayPnl/prev*100:0;
+    const mv=p.mv||0,prev=p.prev||0;
+    const dayPnl=prev>0?mv-prev:0,dayP=prev>0?dayPnl/prev*100:0;
     const wt=total>0?mv/total*100:0;
     const dc=dayPnl>0?'var(--g)':dayPnl<0?'var(--r)':'var(--txd)';
+    const isFixed=syncMap[p.id]!==undefined;
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><input class="inp-inline" style="text-align:left;font-size:12px;" value="${p.name}" oninput="updPos(${p.id},'name',this.value)"></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;">${p.name}</span>${isFixed?'<span style="font-size:8px;color:var(--txd);margin-left:5px;">↔ 同步</span>':''}</td>
       <td><select class="sel-inline" onchange="updPos(${p.id},'type',this.value)">
         <option value="l2" ${p.type==='l2'?'selected':''}>🚀正2</option>
         <option value="l1" ${p.type==='l1'?'selected':''}>💎正一</option>
         <option value="ca" ${p.type==='ca'?'selected':''}>💵現金</option>
       </select></td>
-      <td><input class="inp-inline" type="number" value="${mv||''}" placeholder="今日市值" oninput="updPos(${p.id},'mv',this.value)" style="width:110px;"></td>
-      <td><input class="inp-inline" type="number" value="${prev||''}" placeholder="前日" oninput="updPos(${p.id},'prev',this.value)" style="width:90px;color:var(--txd);"></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--g);">${fmt(mv)}</span>${isFixed?'<br><span style="font-size:8px;color:var(--txd);">從第一頁</span>':'<br><input class="inp-inline" type="number" value="'+mv+'" oninput="updPos('+p.id+',\'mv\',this.value)" style="width:90px;">'}</td>
+      <td><input class="inp-inline" type="number" value="${prev||''}" placeholder="前日" oninput="updPos(${p.id},'prev',this.value)" style="width:80px;color:var(--txd);"></td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${dc};">${prev>0?(dayPnl>=0?'+':'')+Math.round(dayPnl).toLocaleString()+'<br><span style="font-size:9px;">'+fmtP(dayP)+'</span>':'——'}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--gold);">${wt.toFixed(1)}%</td>
-      <td><span onclick="delPos(${p.id})" style="cursor:pointer;color:var(--txd);font-size:14px;">×</span></td>`;
+      ${!isFixed?'<td><span onclick="delPos('+p.id+')" style="cursor:pointer;color:var(--txd);">×</span></td>':'<td></td>'}`;
     tb.appendChild(tr);
   });
 }
@@ -687,12 +714,35 @@ function addTrade(){
 }
 function delTrade(i){trades.splice(i,1);renderTrades();saveJnl();}
 
-// ── 走勢圖 ───────────────────────────────────
-function loadChart(input){
+// ── 走勢圖（支援兩張）───────────────────────────
+function loadChart(input,num){
   const f=input.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=e=>{$('chart_img').src=e.target.result;$('chart_img').style.display='block';$('chart_txt').style.display='none';saveJnl();};
+  r.onload=e=>{
+    const img=$(num===2?'chart_img2':'chart_img');
+    const txt=$(num===2?'chart_txt2':'chart_txt');
+    img.src=e.target.result;img.style.display='block';txt.style.display='none';
+    saveJnl();
+  };
   r.readAsDataURL(f);
+}
+
+// ── 從三桶同步到持倉 ─────────────────────────────
+function syncFromBuckets(){
+  const tw2=parseFloat($('b_tw2').value)||0;
+  const nq2=parseFloat($('b_nq2').value)||0;
+  const tsmc=parseFloat($('b_tsmc').value)||0;
+  const nq1=parseFloat($('b_nq1').value)||0;
+  const cash=parseFloat($('b_cash').value)||0;
+  const bond=parseFloat($('b_bond').value)||0;
+  // 更新對應的持倉market value
+  const syncMap={
+    1:tw2, 2:nq2, 3:tsmc, 4:nq1, 5:cash+bond
+  };
+  positions.forEach(p=>{
+    if(syncMap[p.id]!==undefined) p.mv=syncMap[p.id];
+  });
+  renderPos();upd();saveJnl();
 }
 
 // ── 歷史 ─────────────────────────────────────
